@@ -5,6 +5,7 @@ class PbtGym(object):
         dose_model = None
         data_loader = None
         model_params = None
+        out_file_fp = f"checkpoints/{model_params.model_name}/"
 
     def train():
         pass
