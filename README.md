@@ -7,6 +7,7 @@ pip install gym
 pip install pydicom
 pip install numpy
 pip install matplotlib
-pip install jax
-pip install cupy
+pip install stablebaselines3
+pip install torch
+pip install cv2
 ```
