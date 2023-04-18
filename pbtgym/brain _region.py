@@ -4,11 +4,7 @@ Created on Thu Mar 23 15:32:16 2023
 
 @author: Rob Chambers
 """
-import os
-import pydicom as dcm
-import numpy as np
-import cv2 as cv
-import preprocessing
+from .requirements import *
 
 class BrainRegion(object):
     def __init__(self, directory, structure, contour_name, threshold):

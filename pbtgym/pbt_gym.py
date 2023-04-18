@@ -1,4 +1,5 @@
 from . import dose_model
+from .requirements import *
 
 class PbtGym(object):
     def __init__(self):

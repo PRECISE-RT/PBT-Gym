@@ -9,16 +9,24 @@ class. It's purpose is to create a basic model of a proton beam dosing a patient
 so that reinforcing learning techniques
 """
 
-import numpy as np 
-from gym import Env, spaces
-import matplotlib.pyplot as plt
-import Beam
+from .requirements import *
+from .beam import Beam
+from .dose_model import BitWiseDose, ComplexDose
+from .brain_region import BrainRegion
 
 class ParallelBeamEnv(Env):
-    def __init__(self):
+    def __init__(self, dose_choice: str, action_space_type: str, CANCER: BrainRegion, EXTERNAL: BrainRegion):
         super(ParallelBeamEnv, self).__init__()
         self.cancer = CANCER
         self.external = EXTERNAL
+        if dose_choice == "complex":
+            self.dose = ComplexDose()
+        elif dose_choice == "bit_wise":
+            self.dose = BitWiseDose(3)
+        else:
+            raise Exception(f"No dosing method found under name: {dose_choice}. Please enter a valid dose method e.g. complex and bit_wise.")
+        self.dose.canvas = -0.7 * np.array(self.cancer.boolean_map, dtype=np.float32)
+
         self.match_uid(self.cancer, self.external)
         self.search_space = self.bound_search_space(self.cancer)
         self.learn_space = self.bound_search_space(self.external)
@@ -50,7 +58,6 @@ class ParallelBeamEnv(Env):
         self.theta_resolution = 45 # How many degrees changed per step
         self.default_dose = 0.1 # Default amount to be used until variable dosing is implemented. Can also be a reference value for decrete choice dosing e.g choices are 0, 0.25, 0.5, 1, 1.5, 2, 2.5x reference dose when choosing
         self.step_size = 3
-        self.canvas = -0.7 * np.array(self.cancer.boolean_map, dtype=np.float32)
         self.other_brain_regions = []
         self.reward_multipliers = []
         self.reward_stack = self.calculate_reward_stack()
@@ -72,7 +79,7 @@ class ParallelBeamEnv(Env):
             done = False
         
         # Translational Shift
-        del_xy = (action[0:2] - 1) * self.step_size # The 1 here can be changed to change step size
+        del_xy = (action[0:2] - 1) * self.step_size
         self.beam.move(del_xy[0], del_xy[1])
         self.state["position"] = np.array([self.beam.x, self.beam.y])
         
@@ -86,8 +93,8 @@ class ParallelBeamEnv(Env):
         self.beam.rotate(del_theta)
         # Apply_dose and calculate corresponding reward
         if action[3] == 1:
-            reward = self.updated_apply_dose()# Change the dosing methods here
-            self.state["dose distribution"] = self.canvas[self.x_min:self.x_max, self.y_min:self.y_max]
+            reward = self.dose.apply_dose()# Change the dosing methods here
+            self.state["dose distribution"] = self.dose.canvas[self.x_min:self.x_max, self.y_min:self.y_max]
 
         # Check for overdosing
         if (np.max(self.state["dose distribution"]) > self.target_dose):
@@ -132,7 +139,7 @@ class ParallelBeamEnv(Env):
         self.beam.y = np.random.randint(self.beam.y_min, self.beam.y_max)
         # self.beam.x = int((self.beam.x_min + self.beam.x_max) / 2)
         # self.beam.y = int((self.beam.y_min + self.beam.y_max) / 2)
-        self.canvas = -0.7 * np.array(self.cancer.boolean_map, dtype=np.float32)
+        self.dose.canvas = -0.7 * np.array(self.cancer.boolean_map, dtype=np.float32)
         return self.state
     
     def render(self, mode = "human"):
@@ -142,12 +149,12 @@ class ParallelBeamEnv(Env):
         assert mode in ["human", "rgb_array"], "Invalid mode, must be either \"human\" or \"rgb_array\""
         if mode == "human":
             #s_s = self.search_space
-            plt.imshow(self.canvas)#[s_s[0]:s_s[2] + 1, s_s[1]:s_s[3]+ 1])
+            plt.imshow(self.dose.canvas)#[s_s[0]:s_s[2] + 1, s_s[1]:s_s[3]+ 1])
             plt.savefig("LatestDose")# Maybe have the contour outputted for humans as well
             return None
     
         elif mode == "rgb_array":
-            return self.canvas
+            return self.dose.canvas
 
     def is_beam_over_cancer(self):
         """
@@ -157,106 +164,11 @@ class ParallelBeamEnv(Env):
         x = self.beam.x
         y = self.beam.y        
         beam_over_cancer = self.cancer.boolean_map[(y-1):(y+2),(x-1):(x+2)]
-        dose = np.max(self.canvas[(y-1):(y+2),(x-1):(x+2)])
+        dose = np.max(self.dose.canvas[(y-1):(y+2),(x-1):(x+2)])
         if (np.sum(beam_over_cancer) == 9) and (dose < 0.7):# Just a placeholder for the dose limit
             return True
         else:
             return False
-
-    def apply_dose(self):
-        """
-        Applies dose (currently just a fixed amount) at given angle and position.
-        Currently just going to place 3x3 dose centered on beam position in order
-        to implement proof of concept. Then can increase levels of complexity
-        from there.
-        """
-        square_dose = self.default_dose * np.ones((3,3))
-        x = self.beam.x
-        y = self.beam.y
-        dose_overlap = np.sum(self.reward_map[(y-1):(y+2),(x-1):(x+2)] * square_dose)
-        normalised_reward = dose_overlap / (9 * self.default_dose)
-        self.canvas[(y-1):(y+2),(x-1):(x+2)] += square_dose
-        return normalised_reward
-
-    def updated_apply_dose(self):
-        """
-        Creates a line of a given thickness between two points and applies a 
-        custom gradient to said line (function of distance along the line).
-        Then calculates a normalised reward based on the overlap of dose and
-        contour.
-        """
-        x = self.beam.x
-        y = self.beam.y
-        theta = self.beam.theta
-        # Defining properties of each circle to be drawn
-        radius = 2
-        n=0
-        score = 0
-        if not self.within_patient(x,y):# Just double check this later
-        #     print("Not within patient")
-            score -= 0.1
-        # else:
-        #     print("Within target")
-
-        if theta == 0:
-            while(self.within_patient(x+n,y)):
-                value = self.beam.calculate_dose_gradient(n)
-                self.canvas[y+n,x-radius:x+radius+1] += value
-                score += np.sum(self.reward_map[y+n,x-radius:x+radius+1]) * value / (2*radius + 1)
-                n += 1
-
-        elif theta == 180:
-            while(self.within_patient(x-n,y)):
-                value = self.beam.calculate_dose_gradient(n)
-                self.canvas[y-n,x-radius:x+radius+1] += value
-                score += np.sum(self.reward_map[y-n,x-radius:x+radius+1]) * value / (2*radius + 1)
-                n += 1
-
-        elif theta == 90:
-            while(self.within_patient(x,y+n)):
-                value = self.beam.calculate_dose_gradient(n)
-                self.canvas[y-radius:y+radius+1,x+n] += value
-                score += np.sum(self.reward_map[y-radius:y+radius+1,y+n]) * value / (2*radius + 1) # Multiplicative term at the end here is a normalisation factor (value [0,1], 2x Radius + 1 pixels per step)
-                n += 1
-
-        elif theta == 270:
-            while(self.within_patient(x,y-n)):
-                value = self.beam.calculate_dose_gradient(n)
-                self.canvas[y-radius:y+radius+1,y-n] += value
-                score += np.sum(self.reward_map[y-radius:y+radius+1,x-n]) * value / (2*radius + 1)
-                n += 1
-
-        elif theta < 90 or theta > 270:
-            m = np.rint(np.tan(theta*np.pi/180))
-            while(self.within_patient(x+n,int(y+m*n))):
-                distance = n * np.sqrt(1 + m**2) # should always be sqrt(2) x n for this model but writing like this in case theta precision changes
-                value = self.beam.calculate_dose_gradient(distance)
-                for r in range(2*radius+1):
-                    k = r - radius
-                    self.canvas[y+n-k, int(x+m*(n+k))] += value
-                    score += np.sum(self.reward_map[y+n-k, int(x+m*(n+k))]) * value / (2*radius + 1)  
-                for r in range(2*radius):
-                    k = r - radius
-                    self.canvas[y+n+k, int(x+m*(n-k-1))] += value
-                    score += np.sum(self.reward_map[y+n+k, int(x+m*(n-k-1))]) * value / (2*radius)
-                n += 1
-
-        elif theta > 90 and theta < 270:
-            m = np.rint(np.tan(theta*np.pi/180))
-            while(self.within_patient(x-n,int(y-m*n))):
-                distance = n * np.sqrt(1 + m**2) # should always be sqrt(2) x n for this model but writing like this in case theta precision changes
-                value = self.beam.calculate_dose_gradient(distance)
-                for r in range(2*radius+1):
-                    k = r - radius
-                    self.canvas[y-n-k,int(x-m*(n-k))] += value
-                    score += np.sum(self.reward_map[y-radius:y+radius+1,x-n]) * value / (2*radius + 1)
-
-                for r in range(2*radius):
-                    k = r - radius
-                    self.canvas[y-n+k, int(x-m*(n+k+1))] += value
-                    score += np.sum(self.reward_map[y-n+k, int(x-m*(n+k+1))]) * value / (2*radius)
-                n += 1
-        return score
 
     def bound_search_space(self, region):
         """

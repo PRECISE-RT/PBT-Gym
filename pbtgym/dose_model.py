@@ -1,13 +1,15 @@
+from .requirements import *
+
 class BaseDose(object):
     def __init__(self):
-        pass
+        self.canvas = []
     def apply_dose():
         pass
 
 class BitWiseDose(BaseDose):
-    def __init__(self, env: ParallelBeamEnv, spot_size: float) -> None:
+    def __init__(self, spot_size: float) -> None:
         self.spot_size = spot_size
-        self.env = env
+        self.canvas = []
     
     def apply_dose(self) -> float:
         """
@@ -16,17 +18,17 @@ class BitWiseDose(BaseDose):
         to implement proof of concept. Then can increase levels of complexity
         from there.
         """
-        square_dose = self.env.default_dose * np.ones((3,3))
+        square_dose = self.env.default_dose * np.ones((3, 3))
         x = self.env.beam.x
         y = self.env.beam.y
         dose_overlap = np.sum(self.reward_map[(y-1):(y+2),(x-1):(x+2)] * square_dose)
         score = dose_overlap / (9 * self.default_dose)
-        self.env.canvas[(y-1):(y+2),(x-1):(x+2)] += square_dose
+        self.canvas[(y-1):(y+2),(x-1):(x+2)] += square_dose
         return score
 
 class ComplexDose(BaseDose):
-    def __init__(self, env: ParallelBeamEnv) -> None:
-        self.env = env
+    def __init__(self) -> None:
+        self.canvas = []
 
     def apply_dose(self) -> float:
         """

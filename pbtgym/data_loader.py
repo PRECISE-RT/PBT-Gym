@@ -1,5 +1,6 @@
 from __future__ import annotations
 from . import util
+from .requirements import *
 
 def data_loader_2D(CT_fp: str, RS_fp: str, split:float) -> tuple[list, list]:
     pass

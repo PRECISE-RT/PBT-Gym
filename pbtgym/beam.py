@@ -4,7 +4,7 @@ Created on Thu Mar 23 15:18:37 2023
 
 @author: Rob Chambers
 """
-import numpy as np
+from .requirements import *
 
 class Beam(object):
     def __init__(self, contour_region):
