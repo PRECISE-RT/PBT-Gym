@@ -2,9 +2,9 @@
 """
 Created on Thu Mar 23 15:18:37 2023
 
-@author: Rob Chambers
+@authors: Rob Chambers, Huw McNally
 """
-from .requirements import *
+import numpy as np
 
 class Beam(object):
     def __init__(self, contour_region):

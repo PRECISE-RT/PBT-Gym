@@ -2,7 +2,7 @@
 """
 Created on Thu Mar 23 15:02:14 2023
 
-@author: Rob Chambers
+@author: Rob Chambers, Huw McNally
 
 This file contains the ParallelBeamEnv class, inheriting from openAI gym's Env
 class. It's purpose is to create a basic model of a proton beam dosing a patient
