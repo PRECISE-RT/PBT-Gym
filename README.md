@@ -16,7 +16,9 @@ pip install cv2
 ```
 
 # Getting Started
-Coming soon...
+Check out our [basics tutorial](https://github.com/PRECISE-RT/PBT-Gym/blob/main/basicsTutorial.ipynb)
+
+Further getting started guidance is being developed.
 
 ## Contribute
 We welcome anyone wishing to expand the functionality of the *PBT-Gym* project. Therefore, if you wish to contribute to the project please see our [contributing guidelines](https://github.com/PRECISE-RT/PBT-Gym/blob/main/CONTRIBUTING.md).
