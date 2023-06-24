@@ -16,7 +16,7 @@ pip install cv2
 ```
 
 # Getting Started
-Check out our [basics tutorial](https://github.com/PRECISE-RT/PBT-Gym/blob/main/basicsTutorial.ipynb)
+Check out our [basics tutorial](https://github.com/PRECISE-RT/PBT-Gym/blob/main/basicsTutorial.ipynb) for an overview of what tools are being used in this project.
 
 Further getting started guidance is being developed.
 
