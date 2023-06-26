@@ -1,5 +1,5 @@
 # PBT-Gym
-This python package provides tools to help gamify proton beam therapy treatment planning for applications in a reinforcement learning.
+This python package provides tools to help gamify proton beam therapy treatment planning for applications in (a) reinforcement learning (environment).
 
 ## Warning
 *This code base is continuously being developed to add new features. For the newest version, changelog, documentation and support please check updates of the code at https://github.com/PRECISE-RT/PBT-Gym.*
