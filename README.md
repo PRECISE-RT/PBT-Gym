@@ -24,9 +24,9 @@ Further getting started guidance is being developed.
 We welcome anyone wishing to expand the functionality of the *PBT-Gym* project. Therefore, if you wish to contribute to the project please see our [contributing guidelines](https://github.com/PRECISE-RT/PBT-Gym/blob/main/CONTRIBUTING.md).
 
 ## Contributors
-- Robbie Chambers - *MPhys Contributor: Project initiator*
-- Huw McNally - *MPhys Contributor: Project initiator*
-- Sam Ingram - *Project Supervisor*
+- [Robbie Chambers](https://github.com/RobJChambers) - *MPhys Contributor: Project initiator*
+- [Huw McNally](https://github.com/huwmcnally) - *MPhys Contributor: Project initiator*
+- [Sam Ingram](https://github.com/SamPIngram) - *Project Supervisor*
 
 ## License
 This package is licensed open-source under the GNU GENERAL PUBLIC LICENSE Version 3.
