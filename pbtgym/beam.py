@@ -46,7 +46,7 @@ class Beam(object):
 
     def update_search_space(self, contour_map):
         """
-        Runs through each element in binary map
+        Runs through each element in binary map to set maximum/minimum x,y
         """
         min_x = 512
         max_x = 0
@@ -71,9 +71,10 @@ class Beam(object):
         Finds the proton energy required to place the Bragg peak of the spot at
         the required location in the brain given the location of the beam
         """
+    
     def calculate_dose_gradient(self, distance):
         """
-        A WET approximation calculation to give the intensity of dose as a
+        A Gaussian approximation calculation to give the intensity of dose as a
         function of distance from beam spot
         """
         return 0.1 * np.exp(-(distance**2)/3)
